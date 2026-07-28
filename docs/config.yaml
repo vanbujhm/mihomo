@@ -1050,7 +1050,7 @@ proxies: # socks5
       # x-padding-header: Referer
       # x-padding-placement: queryInHeader # Available: queryInHeader, cookie, header, query
       # x-padding-method: repeat-x # Available: repeat-x, tokenish
-      # uplink-http-method: POST # Available: POST, PUT, PATCH, DELETE
+      # uplink-http-method: POST # Available: POST, PUT, PATCH, DELETE, GET (packet-up only)
       # session-placement: path # Available: path, query, cookie, header
       # session-key: ""
       # seq-placement: path # Available: path, query, cookie, header
@@ -2331,7 +2331,7 @@ listeners:
     #   x-padding-header: Referer
     #   x-padding-placement: queryInHeader # Available: queryInHeader, cookie, header, query
     #   x-padding-method: repeat-x # Available: repeat-x, tokenish
-    #   uplink-http-method: POST # Available: POST, PUT, PATCH, DELETE
+    #   uplink-http-method: POST # Available: POST, PUT, PATCH, DELETE, GET (packet-up only)
     #   session-placement: path # Available: path, query, cookie, header
     #   session-key: ""
     #   session-table: "" # Available: "", "uuid", "ALPHABET", "Alphabet", "BASE36", "Base62", "HEX", "alphabet", "base36", "hex", "number"

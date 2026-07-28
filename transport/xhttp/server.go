@@ -279,8 +279,10 @@ func (h *requestHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		currentSession = h.upsertSession(sessionId)
 	}
 
+	isUplinkRequest := r.Method != http.MethodGet || seqStr != ""
+
 	// stream-up upload: POST /path/{session}
-	if r.Method != http.MethodGet && sessionId != "" && seqStr == "" && h.allowStreamUpUpload() {
+	if isUplinkRequest && sessionId != "" && seqStr == "" && h.allowStreamUpUpload() {
 		httpSC := newHTTPServerConn(w, r.Body)
 		err := currentSession.uploadQueue.Push(Packet{
 			Reader: httpSC,
@@ -328,8 +330,8 @@ func (h *requestHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// packet-up upload: POST /path/{session}/{seq}
-	if r.Method != http.MethodGet && sessionId != "" && seqStr != "" && h.allowPacketUpUpload() {
+	// packet-up upload: /path/{session}/{seq}
+	if isUplinkRequest && sessionId != "" && seqStr != "" && h.allowPacketUpUpload() {
 		scMaxEachPostBytes := h.scMaxEachPostBytes.Max
 		dataPlacement := h.config.GetNormalizedUplinkDataPlacement()
 		uplinkDataKey := h.config.UplinkDataKey
@@ -427,7 +429,7 @@ func (h *requestHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// stream-up/packet-up download: GET /path/{session}
-	if r.Method == http.MethodGet && sessionId != "" && seqStr == "" && h.allowSessionDownload() {
+	if !isUplinkRequest && sessionId != "" && seqStr == "" && h.allowSessionDownload() {
 		currentSession.markConnected()
 
 		// magic header instructs nginx + apache to not buffer response body
@@ -468,7 +470,7 @@ func (h *requestHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// stream-one: POST /path
-	if r.Method != http.MethodGet && sessionId == "" && seqStr == "" && h.allowStreamOne() {
+	if isUplinkRequest && sessionId == "" && seqStr == "" && h.allowStreamOne() {
 		w.Header().Set("X-Accel-Buffering", "no")
 		w.Header().Set("Cache-Control", "no-store")
 		w.WriteHeader(http.StatusOK)
