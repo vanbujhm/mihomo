@@ -1,0 +1,37 @@
+# Keeps Meta-xhttp = MetaCubeX/mihomo@Meta + local patches (rebased).
+# Requires repo secret SYNC_TOKEN: PAT with "repo" + "workflow" scopes
+# (GITHUB_TOKEN cannot push changes to .github/workflows and its pushes
+# don't trigger the Build workflow).
+name: Sync with upstream Meta
+on:
+  schedule:
+    - cron: '17 */6 * * *'
+  workflow_dispatch:
+concurrency:
+  group: sync-upstream
+  cancel-in-progress: false
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: Meta-xhttp
+          fetch-depth: 0
+          token: ${{ secrets.SYNC_TOKEN }}
+      - name: Rebase onto upstream Meta
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git remote add upstream https://github.com/MetaCubeX/mihomo.git
+          git fetch upstream Meta
+          if git merge-base --is-ancestor upstream/Meta HEAD; then
+            echo "Already up to date with upstream/Meta"
+            exit 0
+          fi
+          if ! git rebase upstream/Meta; then
+            git rebase --abort
+            echo "::error::Rebase conflict with upstream/Meta - resolve manually"
+            exit 1
+          fi
+          git push --force-with-lease origin HEAD:Meta-xhttp

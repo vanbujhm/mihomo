@@ -12,6 +12,7 @@ on:
       - ".github/ISSUE_TEMPLATE/**"
     branches:
       - Alpha
+      - Meta-xhttp
     tags:
       - "v*"
   pull_request:
@@ -445,7 +446,7 @@ jobs:
           body_path: release.md
 
   Docker:
-    if: ${{ !startsWith(github.event_name, 'pull_request') }}
+    if: ${{ !startsWith(github.event_name, 'pull_request') && github.repository == 'MetaCubeX/mihomo' }}
     permissions: write-all
     needs: [build]
     runs-on: ubuntu-latest
