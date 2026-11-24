@@ -25,7 +25,7 @@ jobs:
       - name: Re-publish release with fresh date and title
         run: |
           git remote add upstream https://github.com/MetaCubeX/mihomo.git
-          git fetch -q upstream --tags
+          git fetch -q --force upstream 'refs/tags/v*:refs/tags/v*'
           base=$(git describe --tags --abbrev=0 --match 'v*' HEAD)
           sha=$(git rev-parse --short=7 HEAD)
           date=$(date -u +%Y-%m-%d)
