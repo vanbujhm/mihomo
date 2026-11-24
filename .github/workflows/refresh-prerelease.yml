@@ -1,0 +1,35 @@
+# Build's Upload-Prerelease reuses the existing release and only swaps assets,
+# so GitHub keeps showing the first publish date. Re-publish it after every
+# successful build so the date and title reflect the latest build.
+name: Refresh prerelease date
+on:
+  workflow_run:
+    workflows: [Build]
+    types: [completed]
+    branches: [Meta-xhttp]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  refresh:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TAG: Prerelease-Meta-xhttp
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: Meta-xhttp
+          fetch-depth: 0
+      - name: Re-publish release with fresh date and title
+        run: |
+          git remote add upstream https://github.com/MetaCubeX/mihomo.git
+          git fetch -q upstream --tags
+          base=$(git describe --tags --abbrev=0 --match 'v*' HEAD)
+          sha=$(git rev-parse --short=7 HEAD)
+          date=$(date -u +%Y-%m-%d)
+          id=$(gh api "repos/$GITHUB_REPOSITORY/releases/tags/$TAG" --jq .id)
+          gh api -X PATCH "repos/$GITHUB_REPOSITORY/releases/$id" -F draft=true >/dev/null
+          gh api -X PATCH "repos/$GITHUB_REPOSITORY/releases/$id" -F draft=false -F prerelease=true \
+            -f name="Meta-xhttp $base+ ($sha, $date)" --jq '"\(.name) published \(.published_at)"'
